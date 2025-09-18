@@ -9,7 +9,7 @@ import sqlite3
 import json
 import logging
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 import aiosqlite
 import os
@@ -109,7 +109,7 @@ class Database:
                     json.dumps(result.get('descriptors', {})),
                     json.dumps(result.get('warnings', [])),
                     result.get('processing_time', 0.0),
-                    datetime.utcnow().isoformat() + "Z",
+                    datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
                     'basic-v1.0'
                 ))
                 
@@ -186,8 +186,8 @@ class Database:
                 
                 # Recent activity (last 24 hours)
                 async with db.execute('''
-                    SELECT COUNT(*) FROM predictions 
-                    WHERE datetime(timestamp) > datetime('now', '-1 day')
+                    SELECT COUNT(*) FROM predictions
+                    WHERE datetime(timestamp) >= datetime('now', '-1 day')
                 ''') as cursor:
                     recent = (await cursor.fetchone())[0]
                 
